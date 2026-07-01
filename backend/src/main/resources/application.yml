@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: friend-backend
+  datasource:
+    url: ${FRIEND_DB_URL:jdbc:postgresql://localhost:5432/friend}
+    username: ${FRIEND_DB_USERNAME:friend}
+    password: ${FRIEND_DB_PASSWORD:friend_dev_password}
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+server:
+  port: ${FRIEND_BACKEND_PORT:8080}
