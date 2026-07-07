@@ -15,7 +15,7 @@ Repository layout:
 - Booking policy gates for verification, approved companion profiles, allowed categories, safe meeting spots, blocked relationships, self-booking, and max duration.
 - Booking state machine with audited server-side transitions.
 - Minimal internal REST endpoints for booking, accept, check-in, check-out, report, and safety-card lookup.
-- Development-only actor header placeholder: `X-Dev-Actor-Id`.
+- Production Bearer JWT authentication for protected backend APIs, with development-only actor header support for local testing.
 - No-op local gateways for notifications, trusted-contact alerts, KYC, and payments.
 - Focused service tests for the core safety requirements.
 - Flutter mobile structure under `lib/app`, `lib/core`, and `lib/features`.
@@ -34,7 +34,7 @@ Last reviewed: 2026-07-07.
 
 Reviewed areas:
 
-- Login/auth placeholder: real production authentication is still not implemented. The temporary `X-Dev-Actor-Id` shortcut is restricted to `dev`/`test` profiles and requires explicit `friend.security.dev-actor-enabled=true`.
+- Login/auth: production backend APIs require Spring Security Bearer JWT authentication. The authenticated JWT `sub` claim must be the Friend user UUID. The temporary `X-Dev-Actor-Id` shortcut is restricted to `dev`/`test` profiles and requires explicit `friend.security.dev-actor-enabled=true`.
 - Authorization boundary: clients do not submit role, verification status, booking status, safety state, or approval state. The backend remains the source of truth for booking state transitions and safety policy.
 - API keys and secrets: `.gitignore` excludes `.env`, private keys, keystores, service-account JSON, credential folders, production Firebase options, and backend build artifacts. A repository scan for common API key/private key patterns found no committed production secret values.
 - Privacy logging: backend source uses only fixed operational warning logs for dev actor and development audit pepper. Request metadata for audit logs is stored as HMAC-SHA256 hashes, not raw IP address or raw User-Agent values.
@@ -48,7 +48,7 @@ cd backend
 .\gradlew.bat test
 ```
 
-Production readiness gate: do not deploy publicly until real authentication, role-based authorization, provider-backed secret management, rate limiting, abuse detection, and audit-log retention controls are implemented.
+Production readiness gate: do not deploy publicly until role-based authorization, provider-backed secret management, rate limiting, abuse detection, and audit-log retention controls are implemented and reviewed.
 
 ## AI Boundary Rule
 
@@ -75,9 +75,9 @@ For development-only API calls, include:
 X-Dev-Actor-Id: <user-uuid>
 ```
 
-Real authentication is not implemented yet. The development actor header is isolated behind a dev/test profile component and an explicit `friend.security.dev-actor-enabled=true` property. It must not be used as production auth. The app does not enable the dev shortcut by default; local development must opt in explicitly.
+Production authentication uses Spring Security's OAuth2 Resource Server support. Protected APIs require an `Authorization: Bearer <jwt>` header, and the JWT `sub` claim must be a Friend user UUID. Configure the production issuer or JWK Set URI through private environment configuration, for example `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI`.
 
-Never deploy the `dev` profile, never enable the dev actor in production, and do not expose this service publicly until real authentication and authorization are implemented. See `docs/DEPLOYMENT_SECURITY.md`.
+The development actor header is isolated behind a dev/test profile component and an explicit `friend.security.dev-actor-enabled=true` property. It must not be used as production auth. Never deploy the `dev` profile, never enable the dev actor in production, and do not expose this service publicly until authorization policies are implemented and reviewed. See `docs/DEPLOYMENT_SECURITY.md`.
 
 Run the Flutter app locally:
 
@@ -121,8 +121,7 @@ The backend is configured for Java 21. If the local machine does not have Java 2
 
 ## Current Security TODOs
 
-- Replace dev actor header with real authenticated principals.
-- Replace Flutter auth placeholder with real mobile auth and reviewed secure token storage.
+- Replace Flutter auth placeholder with reviewed mobile login and secure token storage for production JWTs.
 - Add role-based authorization and moderator/admin policy checks.
 - Add production KYC, notification, trusted-contact alert, and payment provider integrations.
 - Add rate limiting, abuse detection, and duplicate-report hardening.

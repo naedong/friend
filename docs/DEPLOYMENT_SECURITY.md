@@ -1,6 +1,6 @@
 # Deployment Security
 
-Friend must fail closed until production authentication, authorization, and secrets management are in place.
+Friend must fail closed until production authentication, authorization, and secrets management are configured and reviewed.
 
 Deployment rules:
 
@@ -8,7 +8,7 @@ Deployment rules:
 - Never deploy with `friend.security.dev-actor-enabled=true`.
 - Never expose `X-Dev-Actor-Id` outside local development or tests.
 - Require HTTPS at every public edge before public beta.
-- Require real authentication and role-based authorization before public beta.
+- Require Bearer JWT authentication and role-based authorization before public beta.
 - Store secrets in private secrets management, not in Git, build artifacts, Docker images, logs, or tickets.
 - Enable GitHub Secret Scanning and Push Protection before accepting external contributors or production credentials.
 - Require database migration review before every deployment.
@@ -21,14 +21,15 @@ Required production configuration:
 - `FRIEND_DB_USERNAME`
 - `FRIEND_DB_PASSWORD`
 - `FRIEND_AUDIT_HASH_PEPPER`
-- Real authentication provider configuration
+- JWT issuer or JWK Set configuration for Spring Security OAuth2 Resource Server
 - Private KYC, payment, notification, and trusted-contact provider secrets when those integrations are implemented
 
 Production blockers:
 
-- The current backend intentionally has no production `ActorProvider`.
-- Starting outside `dev` or `test` without a real `ActorProvider` must fail.
-- `permitAll()` exists only behind dev/test plus explicit dev actor opt-in. It must not be used by production profiles.
+- Production protected APIs require `Authorization: Bearer <jwt>`.
+- Production maps the authenticated JWT `sub` claim to the Friend user UUID.
+- Public unauthenticated access is limited to Safety Card lookup endpoints.
+- Broad `permitAll()` exists only behind dev/test plus explicit dev actor opt-in. It must not be used by production profiles.
 
 Transport and data handling:
 

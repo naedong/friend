@@ -45,7 +45,8 @@ Audit logging:
 Development auth shortcut:
 
 - The temporary `X-Dev-Actor-Id` actor provider is limited to dev/test profiles and also requires `friend.security.dev-actor-enabled=true`.
-- Production must use real Spring Security principals. If no production authentication provider is configured, the backend should fail closed rather than accept a mock actor.
+- Production protected APIs require Spring Security Bearer JWT authentication.
+- Production maps the authenticated JWT `sub` claim to the Friend user UUID.
 - No production profile may use `permitAll()` for protected APIs.
 - The Flutter client sends `X-Dev-Actor-Id` only when configured for `FRIEND_ENV=dev`. Test and production mobile configs reject dev actor settings.
 
@@ -90,6 +91,6 @@ Future OWASP alignment checklist:
 
 - Map API controls to OWASP ASVS authentication, access control, validation, logging, and privacy requirements.
 - Map mobile client work to OWASP MASVS storage, network, authentication, platform, and privacy requirements.
-- Add production authentication, authorization policies, rate limiting, abuse detection, secret management, and security headers.
+- Add role-based authorization policies, rate limiting, abuse detection, secret management, and security headers.
 - Add audit-log retention policy and tamper-evidence strategy.
 - Add threat modeling for KYC, payments, location, safety-card sharing, and moderator tooling.
