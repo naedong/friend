@@ -27,6 +27,7 @@ public final class TestFixtures {
     public static final UUID BOOKING_ID = UUID.fromString("00000000-0000-0000-0000-000000000003");
     public static final UUID MEETING_SPOT_ID = UUID.fromString("00000000-0000-0000-0000-000000000004");
     public static final UUID REPORT_ID = UUID.fromString("00000000-0000-0000-0000-000000000005");
+    public static final String SAFETY_CARD_TOKEN = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ";
 
     private TestFixtures() {
     }
@@ -114,7 +115,8 @@ public final class TestFixtures {
         SafetyCard card = new SafetyCard();
         card.setId(UUID.randomUUID());
         card.setBookingId(BOOKING_ID);
-        card.setPublicToken("safe-token");
+        card.setPublicToken(SAFETY_CARD_TOKEN);
+        card.setPublicReference("SC-TESTREFERENCE01");
         card.setExpiresAt(Instant.parse("2026-07-02T17:00:00Z"));
         return card;
     }

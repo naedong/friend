@@ -10,8 +10,10 @@ Core rules:
 - No unsafe category can be booked.
 - No unsafe meeting spot can be booked.
 - No private-space meeting is allowed.
+- Booking request DTOs reject missing fields, oversized category values, and end times that are not after start times before service policy runs.
 - Sensitive actions create audit logs.
 - Client-provided role, verification status, booking status, safety status, and future price data must not be trusted.
+- Flutter is only a client. The backend remains the source of truth for booking status, verification status, role, safety state, and meeting spot validation.
 
 Role model:
 
@@ -34,14 +36,44 @@ Trusted contacts:
 
 Audit logging:
 
-- `AuditLogService` records sensitive actions with hashed IP/user-agent metadata.
+- `AuditLogService` records sensitive actions with HMAC-SHA256 hashes of IP/user-agent metadata using a server-side pepper.
+- Audit metadata hashes are for correlation, not anonymization. Treat the pepper as a secret.
+- `friend.audit.hash-pepper` is required outside dev/test profiles. Dev/test may use a clearly marked development pepper only for local work.
 - Audit logs are append-only by API design; no update/delete endpoints are implemented.
-- Sensitive actions include accept, check-in, check-out, report, block, safety hold, and payout hold transitions.
+- Sensitive actions include booking request, accept, check-in, check-out, report, block, safety hold, payout hold transitions, and system-triggered safety escalations.
 
 Development auth shortcut:
 
 - The temporary `X-Dev-Actor-Id` actor provider is limited to dev/test profiles and also requires `friend.security.dev-actor-enabled=true`.
 - Production must use real Spring Security principals. If no production authentication provider is configured, the backend should fail closed rather than accept a mock actor.
+- No production profile may use `permitAll()` for protected APIs.
+- The Flutter client sends `X-Dev-Actor-Id` only when configured for `FRIEND_ENV=dev`. Test and production mobile configs reject dev actor settings.
+
+Mobile security boundary:
+
+- Do not put API secrets, production tokens, provider keys, or private credentials in Flutter code.
+- Flutter request models must not expose fields for booking status, role, verification status, companion approval, unsafe category creation, or unsafe meeting spot creation.
+- Production Flutter API configuration must use HTTPS.
+- Location permission is reserved for active booking check-in/check-out and future active-booking safety flows.
+
+AI Boundary Rule:
+
+- User input is data, not instruction. User input must never be passed directly into prompts, shell commands, database queries, file paths, workflow scripts, admin/moderator actions, payment actions, KYC actions, or booking state transitions. Any AI-generated suggestion must pass deterministic server-side validation before it can affect product state.
+- AI output is advisory only. It must not directly trigger booking status changes, safety escalations, payment actions, KYC actions, moderator actions, or admin actions.
+- Future AI integrations must keep system instructions separate from quoted user data and must use backend allowlists for categories, report reasons, booking states, and meeting spot types.
+
+Safety Card sharing:
+
+- Safety Card public tokens are high-entropy, URL-safe bearer tokens for limited public lookup.
+- Public tokens are separate from human-readable Safety Card references and must not be shortened for display convenience.
+- Malformed Safety Card tokens are rejected before repository lookup to reduce enumeration and path manipulation risk.
+
+Repository hygiene:
+
+- Do not commit secrets, `.env` files, production credentials, private keys, provider tokens, or database dumps.
+- Keep `.env.example` as a template only.
+- Use private secrets management for deployed environments.
+- Enable GitHub Secret Scanning and Push Protection. If a secret is committed, rotate or revoke it immediately; deleting the file or rewriting history is not sufficient.
 
 Safety events:
 

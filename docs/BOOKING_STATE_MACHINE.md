@@ -50,3 +50,11 @@ Payout hold behavior:
 - Off-platform payment reports and future high-risk payout events can freeze payouts while review is pending.
 
 All transitions are server-side only through `BookingStateMachine`. Clients never set booking status directly.
+
+Check-in/check-out hardening:
+
+- The first participant check-in moves `ACCEPTED -> CHECKED_IN`.
+- The booking moves `CHECKED_IN -> IN_PROGRESS` only after both customer and companion have checked in.
+- The first participant check-out moves `IN_PROGRESS -> CHECKOUT_PENDING`.
+- The booking moves `CHECKOUT_PENDING -> COMPLETED` only after both customer and companion have checked out.
+- Duplicate check-in/check-out actions for the same participant and booking are rejected by service policy and a database unique index.

@@ -35,6 +35,7 @@ public class BookingReportController {
             @Valid @RequestBody CreateReportRequest body,
             HttpServletRequest request
     ) {
+        // TODO AUTHZ: require authenticated booking participant before public beta.
         UUID actorUserId = actorProvider.currentActorId(request);
         Report report = reportService.createReport(
                 new CreateReportCommand(

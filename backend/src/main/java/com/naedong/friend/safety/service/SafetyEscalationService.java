@@ -5,7 +5,6 @@ import com.naedong.friend.booking.domain.BookingStatus;
 import com.naedong.friend.booking.repository.BookingRepository;
 import com.naedong.friend.booking.service.BookingStateMachine;
 import com.naedong.friend.common.DomainNotFoundException;
-import com.naedong.friend.common.RequestMetadata;
 import com.naedong.friend.gateway.NotificationGateway;
 import com.naedong.friend.gateway.TrustedContactAlertGateway;
 import com.naedong.friend.safety.domain.BookingSafetyEvent;
@@ -82,13 +81,13 @@ public class SafetyEscalationService {
 
         Booking current = booking;
         if (current.getStatus() == BookingStatus.IN_PROGRESS) {
-            current = bookingStateMachine.transition(current, BookingStatus.CHECKOUT_PENDING, null, "Missed checkout detected", RequestMetadata.empty());
+            current = bookingStateMachine.transitionSystem(current, BookingStatus.CHECKOUT_PENDING, "SYSTEM_MISSED_CHECKOUT_ESCALATION: Missed checkout detected");
         }
         if (current.getStatus() == BookingStatus.CHECKOUT_PENDING) {
-            current = bookingStateMachine.transition(current, BookingStatus.REPORTED, null, "Missed checkout escalated", RequestMetadata.empty());
+            current = bookingStateMachine.transitionSystem(current, BookingStatus.REPORTED, "SYSTEM_MISSED_CHECKOUT_ESCALATION: Missed checkout escalated");
         }
         if (current.getStatus() == BookingStatus.REPORTED) {
-            bookingStateMachine.transition(current, BookingStatus.SAFETY_HOLD, null, "Safety hold after missed checkout", RequestMetadata.empty());
+            bookingStateMachine.transitionSystem(current, BookingStatus.SAFETY_HOLD, "SYSTEM_MISSED_CHECKOUT_ESCALATION: Safety hold after missed checkout");
         }
 
         return List.of(missed, trustedContactAlert, moderatorReview);

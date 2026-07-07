@@ -4,7 +4,9 @@ import static com.naedong.friend.testsupport.TestFixtures.BOOKING_ID;
 import static com.naedong.friend.testsupport.TestFixtures.bookingWithStatus;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -74,5 +76,11 @@ class SafetyEscalationServiceTest {
                 );
         assertThat(booking.getStatus()).isEqualTo(BookingStatus.SAFETY_HOLD);
         verify(notificationGateway).notifyModerator(eq(BOOKING_ID), any(String.class));
+        verify(auditLogService, atLeastOnce()).recordSystem(
+                eq("BOOKING_STATUS_CHANGED"),
+                eq("BOOKING"),
+                eq(BOOKING_ID),
+                contains("SYSTEM_MISSED_CHECKOUT_ESCALATION")
+        );
     }
 }

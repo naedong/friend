@@ -66,14 +66,7 @@ public class BookingStateMachine {
             String reason,
             RequestMetadata metadata
     ) {
-        BookingStatus currentStatus = booking.getStatus();
-        Set<BookingStatus> allowedNextStatuses = TRANSITIONS.getOrDefault(currentStatus, Set.of());
-        if (!allowedNextStatuses.contains(nextStatus)) {
-            throw new InvalidBookingStateTransitionException(
-                    "Invalid booking state transition: " + currentStatus + " -> " + nextStatus
-            );
-        }
-
+        BookingStatus currentStatus = validateTransition(booking, nextStatus);
         booking.setStatus(nextStatus);
         Booking saved = bookingRepository.save(booking);
         auditLogService.record(
@@ -85,5 +78,30 @@ public class BookingStateMachine {
                 metadata
         );
         return saved;
+    }
+
+    @Transactional
+    public Booking transitionSystem(Booking booking, BookingStatus nextStatus, String reason) {
+        BookingStatus currentStatus = validateTransition(booking, nextStatus);
+        booking.setStatus(nextStatus);
+        Booking saved = bookingRepository.save(booking);
+        auditLogService.recordSystem(
+                "BOOKING_STATUS_CHANGED",
+                "BOOKING",
+                booking.getId(),
+                currentStatus + " -> " + nextStatus + ": " + reason
+        );
+        return saved;
+    }
+
+    private BookingStatus validateTransition(Booking booking, BookingStatus nextStatus) {
+        BookingStatus currentStatus = booking.getStatus();
+        Set<BookingStatus> allowedNextStatuses = TRANSITIONS.getOrDefault(currentStatus, Set.of());
+        if (!allowedNextStatuses.contains(nextStatus)) {
+            throw new InvalidBookingStateTransitionException(
+                    "Invalid booking state transition: " + currentStatus + " -> " + nextStatus
+            );
+        }
+        return currentStatus;
     }
 }

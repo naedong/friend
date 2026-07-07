@@ -17,6 +17,9 @@ public class SafetyCard extends CreatedAtEntity {
     @Column(nullable = false, unique = true)
     private String publicToken;
 
+    @Column(unique = true)
+    private String publicReference;
+
     @Column(nullable = false)
     private Instant expiresAt;
 
@@ -34,6 +37,14 @@ public class SafetyCard extends CreatedAtEntity {
 
     public void setPublicToken(String publicToken) {
         this.publicToken = publicToken;
+    }
+
+    public String getPublicReference() {
+        return publicReference;
+    }
+
+    public void setPublicReference(String publicReference) {
+        this.publicReference = publicReference;
     }
 
     public Instant getExpiresAt() {

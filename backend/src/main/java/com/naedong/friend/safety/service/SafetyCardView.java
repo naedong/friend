@@ -1,10 +1,9 @@
 package com.naedong.friend.safety.service;
 
 import java.time.Instant;
-import java.util.UUID;
 
 public record SafetyCardView(
-        UUID bookingId,
+        String safetyCardReference,
         String category,
         MeetingSpotView meetingSpot,
         Instant startTime,

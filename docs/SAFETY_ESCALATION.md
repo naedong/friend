@@ -5,6 +5,7 @@ Checkout missed flow:
 1. Detect bookings in `IN_PROGRESS` or `CHECKOUT_PENDING` after `endTime`.
 2. Create `CHECKOUT_MISSED` safety event.
 3. Move booking toward `SAFETY_HOLD` through valid state-machine transitions.
+4. Record system-triggered audit logs with `SYSTEM_MISSED_CHECKOUT_ESCALATION` in the reason.
 
 Trusted contact alert flow:
 

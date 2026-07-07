@@ -9,7 +9,7 @@ Major tables:
 - `safe_meeting_spot`: public meeting location and safety flags.
 - `booking`: customer, companion, allowed category, meeting spot, time range, server-controlled status.
 - `booking_checkin`: check-in/check-out record, actor user id, optional location, created timestamp.
-- `safety_card`: public token, booking id, expiration timestamp.
+- `safety_card`: public token, non-secret public reference, internal booking id, expiration timestamp.
 - `booking_safety_event`: safety event type, severity, message.
 - `report`: reporter, reported user, booking, reason, review status.
 - `user_block`: blocker, blocked user, created timestamp.
@@ -23,6 +23,8 @@ Security-sensitive fields:
 - `safe_meeting_spot` safety flags determine whether a location can be booked.
 - `booking.status` is changed only by `BookingStateMachine`.
 - `audit_log.ip_hash` and `user_agent_hash` store hashes, not raw network metadata.
+- `booking_checkin` has one row per booking, participant, and check-in/check-out type.
+- `safety_card.public_reference` is safe to show in public responses; internal booking UUIDs stay server-side.
 
 Data intentionally not stored:
 

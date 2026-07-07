@@ -34,6 +34,7 @@ public class BookingController {
             @Valid @RequestBody CreateBookingRequest body,
             HttpServletRequest request
     ) {
+        // TODO AUTHZ: require authenticated CUSTOMER role before public beta.
         UUID actorUserId = actorProvider.currentActorId(request);
         Booking booking = bookingService.createBooking(new CreateBookingCommand(
                 actorUserId,
@@ -48,6 +49,7 @@ public class BookingController {
 
     @PostMapping("/{id}/accept")
     public BookingResponse acceptBooking(@PathVariable UUID id, HttpServletRequest request) {
+        // TODO AUTHZ: require authenticated assigned COMPANION role before public beta.
         UUID actorUserId = actorProvider.currentActorId(request);
         Booking booking = bookingService.acceptBooking(id, actorUserId, RequestMetadataFactory.from(request));
         return BookingResponse.from(booking);
@@ -59,6 +61,7 @@ public class BookingController {
             @Valid @RequestBody(required = false) LocationRequest body,
             HttpServletRequest request
     ) {
+        // TODO AUTHZ: require authenticated booking participant before public beta.
         UUID actorUserId = actorProvider.currentActorId(request);
         LocationRequest location = body == null ? new LocationRequest(null, null) : body;
         Booking booking = bookingService.checkIn(
@@ -77,6 +80,7 @@ public class BookingController {
             @Valid @RequestBody(required = false) LocationRequest body,
             HttpServletRequest request
     ) {
+        // TODO AUTHZ: require authenticated booking participant before public beta.
         UUID actorUserId = actorProvider.currentActorId(request);
         LocationRequest location = body == null ? new LocationRequest(null, null) : body;
         Booking booking = bookingService.checkOut(

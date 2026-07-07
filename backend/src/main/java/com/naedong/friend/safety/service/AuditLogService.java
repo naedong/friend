@@ -4,20 +4,43 @@ import com.naedong.friend.common.RequestMetadata;
 import com.naedong.friend.safety.domain.AuditLog;
 import com.naedong.friend.safety.repository.AuditLogRepository;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.UUID;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuditLogService {
 
-    private final AuditLogRepository auditLogRepository;
+    private static final Logger log = LoggerFactory.getLogger(AuditLogService.class);
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final String DEVELOPMENT_HASH_PEPPER = "friend-development-audit-hash-pepper-not-for-production";
 
-    public AuditLogService(AuditLogRepository auditLogRepository) {
+    private final AuditLogRepository auditLogRepository;
+    private final SecretKeySpec hashKey;
+
+    public AuditLogService(
+            AuditLogRepository auditLogRepository,
+            @Value("${friend.audit.hash-pepper:}") String configuredHashPepper,
+            Environment environment
+    ) {
+        this(auditLogRepository, resolveHashPepper(configuredHashPepper, environment));
+    }
+
+    AuditLogService(AuditLogRepository auditLogRepository, String hashPepper) {
+        if (hashPepper == null || hashPepper.isBlank()) {
+            throw new IllegalStateException("Audit hash pepper must not be blank.");
+        }
         this.auditLogRepository = auditLogRepository;
+        this.hashKey = new SecretKeySpec(hashPepper.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM);
     }
 
     @Transactional
@@ -42,7 +65,7 @@ public class AuditLogService {
 
     @Transactional
     public AuditLog recordSystem(String action, String targetType, UUID targetId, String reason) {
-        return record(null, action, targetType, targetId, reason, RequestMetadata.empty());
+        return record(null, action, targetType, targetId, "SYSTEM_TRIGGERED: " + reason, RequestMetadata.empty());
     }
 
     private String hashNullable(String rawValue) {
@@ -50,10 +73,31 @@ public class AuditLogService {
             return null;
         }
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(rawValue.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 is required for audit metadata hashing", exception);
+            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+            mac.init(hashKey);
+            return HexFormat.of().formatHex(mac.doFinal(rawValue.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException | InvalidKeyException exception) {
+            throw new IllegalStateException(HMAC_ALGORITHM + " is required for audit metadata hashing", exception);
         }
+    }
+
+    private static String resolveHashPepper(String configuredHashPepper, Environment environment) {
+        if (configuredHashPepper != null && !configuredHashPepper.isBlank()) {
+            return configuredHashPepper;
+        }
+        if (hasActiveProfile(environment, "dev") || hasActiveProfile(environment, "test")) {
+            log.warn("Using development audit hash pepper. Configure friend.audit.hash-pepper outside local dev/test.");
+            return DEVELOPMENT_HASH_PEPPER;
+        }
+        throw new IllegalStateException("friend.audit.hash-pepper is required outside dev/test profiles.");
+    }
+
+    private static boolean hasActiveProfile(Environment environment, String profile) {
+        for (String activeProfile : environment.getActiveProfiles()) {
+            if (profile.equals(activeProfile)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

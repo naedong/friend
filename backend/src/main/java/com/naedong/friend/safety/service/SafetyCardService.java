@@ -53,8 +53,9 @@ public class SafetyCardService {
                 .orElseGet(() -> createSafetyCard(bookingId));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public SafetyCardView getSafetyCardView(String publicToken) {
+        SafetyCardToken.requireValid(publicToken);
         SafetyCard safetyCard = safetyCardRepository.findByPublicToken(publicToken)
                 .orElseThrow(() -> new DomainNotFoundException("Safety card not found."));
         if (safetyCard.getExpiresAt().isBefore(Instant.now(clock))) {
@@ -73,7 +74,7 @@ public class SafetyCardService {
                 .orElse(null);
 
         return new SafetyCardView(
-                booking.getId(),
+                ensurePublicReference(safetyCard),
                 booking.getCategory().name(),
                 new SafetyCardView.MeetingSpotView(meetingSpot.getName(), meetingSpot.getAddress()),
                 booking.getStartTime(),
@@ -93,8 +94,21 @@ public class SafetyCardService {
                 .orElseThrow(() -> new DomainNotFoundException("Booking not found: " + bookingId));
         SafetyCard safetyCard = new SafetyCard();
         safetyCard.setBookingId(bookingId);
-        safetyCard.setPublicToken(UUID.randomUUID().toString());
+        safetyCard.setPublicToken(SafetyCardToken.newToken());
+        safetyCard.setPublicReference(newPublicReference());
         safetyCard.setExpiresAt(booking.getEndTime().plus(SAFETY_CARD_TTL_AFTER_BOOKING));
         return safetyCardRepository.save(safetyCard);
+    }
+
+    private String ensurePublicReference(SafetyCard safetyCard) {
+        if (safetyCard.getPublicReference() == null || safetyCard.getPublicReference().isBlank()) {
+            safetyCard.setPublicReference(newPublicReference());
+            safetyCardRepository.save(safetyCard);
+        }
+        return safetyCard.getPublicReference();
+    }
+
+    private String newPublicReference() {
+        return "SC-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 }

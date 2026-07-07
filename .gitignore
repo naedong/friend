@@ -1,9 +1,12 @@
 # Miscellaneous
 *.class
 *.log
+*.log.*
 *.pyc
 *.swp
 .DS_Store
+Thumbs.db
+desktop.ini
 .atom/
 .build/
 .buildlog/
@@ -12,11 +15,31 @@
 .swiftpm/
 migrate_working_dir/
 
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+service-account*.json
+firebase_options_prod.dart
+*credentials*.json
+local.properties
+secrets/
+local-secrets/
+credentials/
+
 # IntelliJ related
 *.iml
 *.ipr
 *.iws
 .idea/
+.classpath
+.project
+.settings/
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -32,6 +55,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+coverage/
 
 # Symbolication related
 app.*.symbols
