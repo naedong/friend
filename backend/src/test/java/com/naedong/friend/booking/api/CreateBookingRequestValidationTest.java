@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
+import java.time.Duration;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +25,8 @@ class CreateBookingRequestValidationTest {
                 COMPANION_ID,
                 "A".repeat(65),
                 MEETING_SPOT_ID,
-                Instant.parse("2026-07-08T10:00:00Z"),
-                Instant.parse("2026-07-08T11:00:00Z")
+                futureStartTime(),
+                futureEndTime()
         );
 
         assertThat(validator.validate(request))
@@ -38,8 +39,8 @@ class CreateBookingRequestValidationTest {
                 COMPANION_ID,
                 "COFFEE_BUDDY",
                 MEETING_SPOT_ID,
-                Instant.parse("2026-07-08T11:00:00Z"),
-                Instant.parse("2026-07-08T10:00:00Z")
+                futureEndTime(),
+                futureStartTime()
         );
 
         assertThat(validator.validate(request))
@@ -66,8 +67,16 @@ class CreateBookingRequestValidationTest {
                 COMPANION_ID,
                 "COFFEE_BUDDY",
                 MEETING_SPOT_ID,
-                Instant.parse("2026-07-08T10:00:00Z"),
-                Instant.parse("2026-07-08T11:00:00Z")
+                futureStartTime(),
+                futureEndTime()
         );
+    }
+
+    private Instant futureStartTime() {
+        return Instant.now().plus(Duration.ofDays(7));
+    }
+
+    private Instant futureEndTime() {
+        return Instant.now().plus(Duration.ofDays(7)).plus(Duration.ofHours(1));
     }
 }
