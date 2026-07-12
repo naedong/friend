@@ -34,10 +34,16 @@ class SafetyCardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             ...rows.map(
-              (row) => Card(
-                child: ListTile(
-                  title: Text(row.label),
-                  subtitle: Text(row.value),
+              (row) => Semantics(
+                label: '${row.label}: ${row.value}',
+                readOnly: true,
+                child: ExcludeSemantics(
+                  child: Card(
+                    child: ListTile(
+                      title: Text(row.label),
+                      subtitle: Text(row.value),
+                    ),
+                  ),
                 ),
               ),
             ),
