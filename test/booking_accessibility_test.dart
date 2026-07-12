@@ -3,13 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:friend/features/booking/models/booking_category.dart';
 import 'package:friend/features/booking/screens/category_selection_screen.dart';
 
+import 'test_support/fakes.dart';
+
 void main() {
   testWidgets('Category selection entries expose button semantics', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
+    final controller = buildTestController();
+    addTearDown(controller.dispose);
 
-    await tester.pumpWidget(const MaterialApp(home: CategorySelectionScreen()));
+    await tester.pumpWidget(
+      MaterialApp(home: CategorySelectionScreen(controller: controller)),
+    );
 
     for (final category in allowedBookingCategories) {
       await tester.ensureVisible(find.text(category.label));
@@ -22,7 +28,13 @@ void main() {
       expect(finder, findsOneWidget);
       expect(
         tester.getSemantics(finder),
-        matchesSemantics(label: label, isButton: true, hasTapAction: true),
+        matchesSemantics(
+          label: label,
+          isButton: true,
+          hasTapAction: true,
+          hasSelectedState: true,
+          isSelected: false,
+        ),
       );
     }
 

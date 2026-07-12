@@ -1,15 +1,21 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+
+import 'package:http/http.dart' as http;
 
 import '../config/app_environment.dart';
 import 'api_exception.dart';
 
 class ApiClient {
-  ApiClient({required this.environment, HttpClient? httpClient})
-    : _httpClient = httpClient ?? HttpClient();
+  ApiClient({
+    required this.environment,
+    http.Client? httpClient,
+    this.requestTimeout = const Duration(seconds: 15),
+  }) : _httpClient = httpClient ?? http.Client();
 
   final AppEnvironment environment;
-  final HttpClient _httpClient;
+  final http.Client _httpClient;
+  final Duration requestTimeout;
 
   Future<Map<String, Object?>> get(String path) {
     return _send(method: 'GET', path: path);
@@ -32,20 +38,31 @@ class ApiClient {
       throw StateError('Production API requests must use HTTPS.');
     }
 
-    final request = await _httpClient.openUrl(method, uri);
-    request.headers.contentType = ContentType.json;
-    request.headers.set(HttpHeaders.acceptHeader, ContentType.json.mimeType);
-    for (final header in environment.requestHeaders().entries) {
-      request.headers.set(header.key, header.value);
-    }
+    final request = http.Request(method, uri)
+      ..headers.addAll({
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        ...environment.requestHeaders(),
+      });
 
     if (body != null) {
-      request.write(jsonEncode(body));
+      request.body = jsonEncode(body);
     }
 
     // TODO SECURITY: Add certificate pinning after production domains are stable.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    late http.Response response;
+    try {
+      final streamedResponse = await _httpClient
+          .send(request)
+          .timeout(requestTimeout);
+      response = await http.Response.fromStream(streamedResponse);
+    } on TimeoutException {
+      throw ApiException(statusCode: 0, message: 'Backend request timed out');
+    } on http.ClientException {
+      throw ApiException(statusCode: 0, message: 'Backend is unreachable');
+    }
+
+    final responseBody = utf8.decode(response.bodyBytes);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw ApiException(
@@ -71,6 +88,6 @@ class ApiClient {
   }
 
   void close() {
-    _httpClient.close(force: true);
+    _httpClient.close();
   }
 }

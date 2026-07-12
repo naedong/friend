@@ -40,6 +40,8 @@ class BookingResponse {
 enum BookingStatusLabel {
   requested('REQUESTED', 'Requested'),
   accepted('ACCEPTED', 'Accepted'),
+  rejected('REJECTED', 'Rejected'),
+  cancelled('CANCELLED', 'Cancelled'),
   checkedIn('CHECKED_IN', 'Checked in'),
   inProgress('IN_PROGRESS', 'In progress'),
   checkoutPending('CHECKOUT_PENDING', 'Checkout pending'),

@@ -49,6 +49,8 @@ Development auth shortcut:
 - Production maps the authenticated JWT `sub` claim to the Friend user UUID.
 - No production profile may use `permitAll()` for protected APIs.
 - The Flutter client sends `X-Dev-Actor-Id` only when configured for `FRIEND_ENV=dev`. Test and production mobile configs reject dev actor settings.
+- Booking option discovery returns only user ID, display name, public bio, verification booleans, and approved meeting-spot details. It excludes email, phone, provider references, account status, roles, and audit data.
+- Development sample identities are created only under the `dev` profile with explicit `friend.dev.seed-enabled=true`; the seed is disabled by default and must never be enabled in production.
 
 Mobile security boundary:
 

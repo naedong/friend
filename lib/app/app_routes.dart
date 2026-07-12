@@ -2,6 +2,7 @@ abstract final class AppRoutes {
   static const productBoundary = '/';
   static const home = '/home';
   static const categorySelection = '/booking/categories';
+  static const companionSelection = '/booking/companion';
   static const safeMeetingSpot = '/booking/meeting-spot';
   static const bookingRequest = '/booking/request';
   static const bookingStatus = '/booking/status';

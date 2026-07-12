@@ -4,14 +4,23 @@ import 'package:friend/core/config/app_environment.dart';
 import 'package:friend/core/security/dev_actor_config.dart';
 import 'package:friend/features/home/home_screen.dart';
 
+import 'test_support/fakes.dart';
+
 void main() {
   testWidgets('Home navigation entries expose button semantics', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
+    final controller = buildTestController();
+    addTearDown(controller.dispose);
 
     await tester.pumpWidget(
-      MaterialApp(home: HomeScreen(environment: _testEnvironment())),
+      MaterialApp(
+        home: HomeScreen(
+          environment: _testEnvironment(),
+          controller: controller,
+        ),
+      ),
     );
 
     for (final label in [

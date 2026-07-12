@@ -1,11 +1,16 @@
 import '../../../core/network/api_client.dart';
 import '../models/report_request.dart';
 
-class ReportApi {
+abstract interface class ReportGateway {
+  Future<ReportResponse> reportBooking(String bookingId, ReportRequest request);
+}
+
+class ReportApi implements ReportGateway {
   const ReportApi(this._apiClient);
 
   final ApiClient _apiClient;
 
+  @override
   Future<ReportResponse> reportBooking(
     String bookingId,
     ReportRequest request,

@@ -2,6 +2,7 @@ package com.naedong.friend.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.naedong.friend.booking.api.BookingOptionsResponse;
 import com.naedong.friend.booking.api.CreateBookingRequest;
 import com.naedong.friend.report.api.CreateReportRequest;
 import java.lang.reflect.RecordComponent;
@@ -49,6 +50,27 @@ class PublicApiShapeTest {
                 "bookingStatus",
                 "safetyHold",
                 "payoutHold"
+        );
+    }
+
+    @Test
+    void bookingOptionCompanionDoesNotExposePrivateAccountFields() {
+        Set<String> fields = recordFields(BookingOptionsResponse.CompanionOption.class);
+
+        assertThat(fields).containsExactlyInAnyOrder(
+                "id",
+                "displayName",
+                "bio",
+                "identityVerified",
+                "livenessVerified"
+        );
+        assertThat(fields).doesNotContain(
+                "email",
+                "phoneNumber",
+                "providerName",
+                "providerReferenceId",
+                "role",
+                "status"
         );
     }
 

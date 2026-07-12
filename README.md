@@ -15,12 +15,14 @@ Repository layout:
 - Booking policy gates for verification, approved companion profiles, allowed categories, safe meeting spots, blocked relationships, self-booking, and max duration.
 - Booking state machine with audited server-side transitions.
 - Minimal internal REST endpoints for booking, accept, check-in, check-out, report, and safety-card lookup.
+- Authenticated booking-option discovery that returns only eligible companions and approved public meeting spots.
 - Production Bearer JWT authentication for protected backend APIs, with development-only actor header support for local testing.
 - No-op local gateways for notifications, trusted-contact alerts, KYC, and payments.
 - Focused service tests for the core safety requirements.
 - Flutter mobile structure under `lib/app`, `lib/core`, and `lib/features`.
 - Flutter API request models that do not carry booking status, role, verification status, or companion approval fields.
-- Safe MVP mobile skeleton screens for product boundary, booking, check-in/out, Safety Card, report, and profile.
+- Stateful Flutter booking flow for category, verified companion, meeting spot, schedule, review, submission, and status.
+- Operational loading, empty, error, retry, and duplicate-submission states for backend-driven screens.
 
 ## Repository Hygiene
 
@@ -69,10 +71,18 @@ cd backend
 .\gradlew.bat bootRun --args='--spring.profiles.active=dev --friend.security.dev-actor-enabled=true'
 ```
 
+For a fresh local database, explicitly enable the development-only sample customer, companion, verification, and meeting spot:
+
+```powershell
+.\gradlew.bat bootRun --args='--spring.profiles.active=dev --friend.security.dev-actor-enabled=true --friend.dev.seed-enabled=true'
+```
+
+The seed component exists only in the `dev` profile and is disabled unless `friend.dev.seed-enabled=true` is supplied.
+
 For development-only API calls, include:
 
 ```text
-X-Dev-Actor-Id: <user-uuid>
+X-Dev-Actor-Id: 00000000-0000-0000-0000-000000000001
 ```
 
 Production authentication uses Spring Security's OAuth2 Resource Server support. Protected APIs require an `Authorization: Bearer <jwt>` header, and the JWT `sub` claim must be a Friend user UUID. Configure the production issuer or JWK Set URI through private environment configuration, for example `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI`.
@@ -89,6 +99,18 @@ For local backend dev actor testing only:
 
 ```powershell
 flutter run --dart-define=FRIEND_ENV=dev --dart-define=FRIEND_DEV_ACTOR_ENABLED=true --dart-define=FRIEND_DEV_ACTOR_ID=<user-uuid>
+```
+
+With the explicit development seed enabled, use:
+
+```powershell
+flutter run --dart-define=FRIEND_ENV=dev --dart-define=FRIEND_API_BASE_URL=http://10.0.2.2:8080 --dart-define=FRIEND_DEV_ACTOR_ENABLED=true --dart-define=FRIEND_DEV_ACTOR_ID=00000000-0000-0000-0000-000000000001
+```
+
+For local Flutter Web verification, use `http://localhost:8080` as the API base URL. Local CORS is restricted to localhost origins and is enabled only with the development security profile:
+
+```powershell
+flutter run -d web-server --web-port=5400 --dart-define=FRIEND_ENV=dev --dart-define=FRIEND_API_BASE_URL=http://localhost:8080 --dart-define=FRIEND_DEV_ACTOR_ENABLED=true --dart-define=FRIEND_DEV_ACTOR_ID=00000000-0000-0000-0000-000000000001
 ```
 
 Non-dev Flutter builds must not include `FRIEND_DEV_ACTOR_ENABLED` or `FRIEND_DEV_ACTOR_ID`. Production Flutter builds must use HTTPS API URLs.

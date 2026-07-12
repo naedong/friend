@@ -6,6 +6,7 @@ Deployment rules:
 
 - Never deploy with the `dev` or `test` Spring profile.
 - Never deploy with `friend.security.dev-actor-enabled=true`.
+- Never deploy with `friend.dev.seed-enabled=true`; local sample identities are development-only.
 - Never expose `X-Dev-Actor-Id` outside local development or tests.
 - Require HTTPS at every public edge before public beta.
 - Require Bearer JWT authentication and role-based authorization before public beta.

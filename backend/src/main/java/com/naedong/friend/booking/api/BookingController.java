@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +47,15 @@ public class BookingController {
                 body.endTime()
         ), RequestMetadataFactory.from(request));
         return BookingResponse.from(booking);
+    }
+
+    @GetMapping("/latest")
+    public ResponseEntity<BookingResponse> getLatestBooking(HttpServletRequest request) {
+        UUID actorUserId = actorProvider.currentActorId(request);
+        return bookingService.findLatestBookingForParticipant(actorUserId)
+                .map(BookingResponse::from)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @PostMapping("/{id}/accept")

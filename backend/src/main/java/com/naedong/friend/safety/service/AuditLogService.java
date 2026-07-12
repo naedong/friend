@@ -12,6 +12,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
     private final SecretKeySpec hashKey;
 
+    @Autowired
     public AuditLogService(
             AuditLogRepository auditLogRepository,
             @Value("${friend.audit.hash-pepper:}") String configuredHashPepper,

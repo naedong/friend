@@ -11,6 +11,7 @@ import com.naedong.friend.common.PolicyViolationException;
 import com.naedong.friend.common.RequestMetadata;
 import com.naedong.friend.safety.service.AuditLogService;
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,17 @@ public class BookingService {
     @Transactional
     public Booking createBooking(CreateBookingCommand command) {
         return createBooking(command, RequestMetadata.empty());
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Booking> findLatestBookingForParticipant(UUID actorUserId) {
+        if (actorUserId == null) {
+            throw new PolicyViolationException("Authenticated user is required.");
+        }
+        return bookingRepository.findFirstByCustomerIdOrCompanionIdOrderByCreatedAtDesc(
+                actorUserId,
+                actorUserId
+        );
     }
 
     @Transactional

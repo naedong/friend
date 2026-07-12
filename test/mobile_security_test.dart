@@ -16,6 +16,8 @@ import 'package:friend/features/safety_card/models/safety_card_view.dart';
 import 'package:friend/features/report/models/report_reason.dart';
 import 'package:friend/features/report/screens/report_screen.dart';
 
+import 'test_support/fakes.dart';
+
 void main() {
   testWidgets('Product boundary screen says not dating and not adult service', (
     tester,
@@ -43,7 +45,11 @@ void main() {
   testWidgets('blocked category labels do not appear in category selection', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: CategorySelectionScreen()));
+    final controller = buildTestController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(home: CategorySelectionScreen(controller: controller)),
+    );
 
     final visibleText = _visibleText(tester).toLowerCase();
     for (final blockedLabel in blockedCategoryLabels) {
@@ -142,6 +148,8 @@ void main() {
   testWidgets('Home screen does not contain unsafe entry labels', (
     tester,
   ) async {
+    final controller = buildTestController();
+    addTearDown(controller.dispose);
     final environment = AppEnvironment(
       kind: EnvironmentKind.dev,
       apiBaseUrl: Uri.parse('http://localhost:8080'),
@@ -149,7 +157,9 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(home: HomeScreen(environment: environment)),
+      MaterialApp(
+        home: HomeScreen(environment: environment, controller: controller),
+      ),
     );
 
     final visibleText = _visibleText(tester).toLowerCase();
@@ -172,7 +182,11 @@ void main() {
   testWidgets('Report screen exposes selectable reasons and block toggle', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: ReportScreen()));
+    final controller = buildTestController(initialBooking: testBooking());
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(home: ReportScreen(controller: controller)),
+    );
 
     RadioGroup<ReportReason> reasonGroup() =>
         tester.widget<RadioGroup<ReportReason>>(
@@ -186,6 +200,7 @@ void main() {
         ValueKey('report-reason-${ReportReason.fakeIdentity.apiValue}'),
       ),
     );
+    await tester.pumpAndSettle();
 
     await tester.tap(
       find.byKey(
@@ -201,6 +216,7 @@ void main() {
     );
 
     await tester.ensureVisible(find.byKey(const ValueKey('report-block-user')));
+    await tester.pumpAndSettle();
     expect(blockTile().value, isFalse);
     await tester.tap(find.byKey(const ValueKey('report-block-user')));
     await tester.pump();
@@ -208,13 +224,21 @@ void main() {
   });
 
   testWidgets('Friend app starts at product boundary', (tester) async {
+    final controller = buildTestController();
+    addTearDown(controller.dispose);
     final environment = AppEnvironment(
       kind: EnvironmentKind.dev,
       apiBaseUrl: Uri.parse('http://localhost:8080'),
       devActorConfig: DevActorConfig(isProduction: false, enabled: false),
     );
 
-    await tester.pumpWidget(FriendApp(environment: environment));
+    await tester.pumpWidget(
+      FriendApp(
+        environment: environment,
+        controller: controller,
+        safetyCardGateway: FakeSafetyCardGateway(),
+      ),
+    );
 
     expect(
       find.text('Friend is for safe public companion bookings.'),
